@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.varunkumar.myapplication.data.BiometricSample
 import com.varunkumar.myapplication.data.DatabaseHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class KeystrokeViewModel(private val dbHelper: DatabaseHelper) : ViewModel() {
     var text by mutableStateOf("")
@@ -46,7 +49,9 @@ class KeystrokeViewModel(private val dbHelper: DatabaseHelper) : ViewModel() {
                 accelZ = accelZ
             )
 
-            dbHelper.insertSample(sample)
+            viewModelScope.launch(Dispatchers.IO) {
+                dbHelper.insertSample(sample)
+            }
             savedCount++
         }
 

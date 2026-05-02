@@ -7,8 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.varunkumar.myapplication.data.BiometricSample
 import com.varunkumar.myapplication.data.DatabaseHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class TouchViewModel(private val dbHelper: DatabaseHelper) : ViewModel() {
     val collectedData = mutableStateListOf<BiometricSample>()
@@ -33,7 +36,9 @@ class TouchViewModel(private val dbHelper: DatabaseHelper) : ViewModel() {
 
     fun addSample(sample: BiometricSample) {
         collectedData.add(sample)
-        dbHelper.insertSample(sample)
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.insertSample(sample)
+        }
     }
 
     fun updateTargetPosition(newPosition: Offset) {
