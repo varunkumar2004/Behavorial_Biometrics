@@ -44,11 +44,12 @@ import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 
 enum class TouchTaskMode { TRACING, TAPPING }
-enum class TracingPattern { S_CURVE, CIRCLE, ZIG_ZAG }
+enum class TracingPattern { S_CURVE, CIRCLE }
 
 @Composable
 fun TouchScreen(
@@ -188,6 +189,12 @@ fun TouchPointComponent(
     var targetPosition by remember { mutableStateOf(Offset(0.5f, 0.5f)) } // Normalized 0..1
     val tapRadius = 40.dp
 
+    val (targetColor, heatMapColor) = when {
+        mode == TouchTaskMode.TAPPING -> Color(0xFFFF9800) to Color(0xFFFFEB3B)
+        pattern == TracingPattern.S_CURVE -> Color(0xFF2196F3) to Color(0xFF00BCD4)
+        else -> Color(0xFF4CAF50) to Color(0xFF8BC34A)
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -195,7 +202,7 @@ fun TouchPointComponent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = Color(0xFFc2bfb4), shape = RoundedCornerShape(20.dp))
+                .background(color = targetColor.copy(alpha = 0.2f), shape = RoundedCornerShape(20.dp))
                 .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -203,7 +210,7 @@ fun TouchPointComponent(
                 Text(
                     text = if (mode == TouchTaskMode.TRACING) "Task: Trace the Path" else "Task: Tap the Target",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = targetColor
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = "Dwell: ${lastSample?.dwellTime ?: 0}ms", style = MaterialTheme.typography.labelMedium)
@@ -218,7 +225,7 @@ fun TouchPointComponent(
                 .fillMaxWidth()
                 .weight(1f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(color = Color(0xFFDBD3BA))
+                .background(color = Color(0xFFF0F0F0))
                 .pointerInput(mode, pattern) {
                     awaitPointerEventScope {
                         while (true) {
@@ -283,29 +290,22 @@ fun TouchPointComponent(
                         TracingPattern.CIRCLE -> Path().apply {
                             addOval(Rect(center, size.minDimension * 0.35f))
                         }
-                        TracingPattern.ZIG_ZAG -> Path().apply {
-                            moveTo(size.width * 0.2f, size.height * 0.2f)
-                            lineTo(size.width * 0.8f, size.height * 0.35f)
-                            lineTo(size.width * 0.2f, size.height * 0.5f)
-                            lineTo(size.width * 0.8f, size.height * 0.65f)
-                            lineTo(size.width * 0.2f, size.height * 0.8f)
-                        }
                     }
                     
                     drawPath(
                         path = targetPath,
-                        color = Color.DarkGray.copy(alpha = 0.2f),
+                        color = targetColor.copy(alpha = 0.2f),
                         style = Stroke(width = 50f)
                     )
                 } else {
                     // Tapping Mode Target
                     drawCircle(
-                        color = Color.Red.copy(alpha = 0.4f),
+                        color = targetColor.copy(alpha = 0.4f),
                         radius = tapRadius.toPx(),
                         center = Offset(targetPosition.x * size.width, targetPosition.y * size.height)
                     )
                     drawCircle(
-                        color = Color.Red,
+                        color = targetColor,
                         radius = 10f,
                         center = Offset(targetPosition.x * size.width, targetPosition.y * size.height)
                     )
@@ -319,7 +319,7 @@ fun TouchPointComponent(
                     
                     drawCircle(
                         brush = Brush.radialGradient(
-                            colors = listOf(Color.Red.copy(alpha = 0.15f), Color.Transparent),
+                            colors = listOf(heatMapColor.copy(alpha = 0.2f), Color.Transparent),
                             center = offset,
                             radius = radius
                         ),
@@ -330,11 +330,17 @@ fun TouchPointComponent(
             }
             
             Text(
-                text = if (mode == TouchTaskMode.TRACING) "Trace carefully" else "Tap the red target",
+                text = if (mode == TouchTaskMode.TRACING) "Trace carefully" else "Tap the target",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
                 color = Color.Gray
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TouchScreenPreview() {
+    TouchScreen(dbHelper = DatabaseHelper(LocalContext.current))
 }
