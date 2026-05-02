@@ -4,8 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,8 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -73,7 +80,9 @@ class MainActivity : ComponentActivity() {
                                 Text(
                                     text = "Step ${currentStepIndex + 1} of ${steps.size - 1}: ${steps[currentStepIndex].label}",
                                     style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(top = 5.dp),
                                     color = MaterialTheme.colorScheme.secondary,
                                 )
                             }
@@ -129,17 +138,36 @@ class MainActivity : ComponentActivity() {
 fun CompletionScreen(onRestart: () -> Unit) {
     Column(
         modifier = Modifier
-            .padding(16.dp)
-            .padding(top = 100.dp) // Add some spacing
-            .fillMaxWidth(),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = 16.dp)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Text(text = "Profile Created Successfully!", style = MaterialTheme.typography.headlineMedium)
-        Text(text = "Your behavioral biometric profile has been recorded across all tests.", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "Profile Created Successfully!",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        Text(
+            text = "Your behavioral biometric profile has been recorded across all tests.",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(Modifier.height(20.dp))
         androidx.compose.material3.Button(onClick = onRestart) {
             Text("Restart Enrollment")
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewScreen() {
+    CompletionScreen {
+
     }
 }
 

@@ -46,6 +46,7 @@ import com.varunkumar.myapplication.data.BiometricSample
 import com.varunkumar.myapplication.data.DatabaseHelper
 import com.varunkumar.myapplication.ui.viewmodel.TouchViewModel
 import com.varunkumar.myapplication.ui.viewmodel.ViewModelFactory
+import com.varunkumar.myapplication.utils.drawBlueprintGrid
 import kotlin.random.Random
 
 enum class TouchTaskMode { TRACING, TAPPING }
@@ -171,7 +172,7 @@ fun TouchPointComponent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = if (mode == TouchTaskMode.TRACING) "Task: Trace the Path" else "Task: Tap the Target",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = targetColor
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -187,7 +188,7 @@ fun TouchPointComponent(
                 .fillMaxWidth()
                 .weight(1f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(color = Color(0xFFF0F0F0))
+                .background(color = targetColor.copy(alpha = 0.05f))
                 .pointerInput(mode, pattern) {
                     awaitPointerEventScope {
                         while (true) {
@@ -251,6 +252,11 @@ fun TouchPointComponent(
                 }
         ) {
             Canvas(modifier = Modifier.fillMaxSize().clipToBounds()) {
+                drawBlueprintGrid(
+                    gridColor = targetColor.copy(alpha = 0.15f),
+                    spacing = 40.dp.toPx()
+                )
+
                 if (mode == TouchTaskMode.TRACING) {
                     val targetPath = when (pattern) {
                         TracingPattern.S_CURVE -> Path().apply {
@@ -308,3 +314,4 @@ fun TouchPointComponent(
         }
     }
 }
+
