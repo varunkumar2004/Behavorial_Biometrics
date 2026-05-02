@@ -1,4 +1,4 @@
-package com.varunkumar.myapplication
+package com.varunkumar.myapplication.ui.screens
 
 import android.content.Context
 import android.hardware.Sensor
@@ -43,6 +43,8 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.varunkumar.myapplication.data.BiometricSample
+import com.varunkumar.myapplication.data.DatabaseHelper
 import kotlin.random.Random
 
 enum class TouchTaskMode { TRACING, TAPPING }

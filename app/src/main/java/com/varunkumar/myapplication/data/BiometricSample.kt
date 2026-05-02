@@ -1,4 +1,4 @@
-package com.varunkumar.myapplication
+package com.varunkumar.myapplication.data
 
 data class BiometricSample(
     val timestamp: Long,

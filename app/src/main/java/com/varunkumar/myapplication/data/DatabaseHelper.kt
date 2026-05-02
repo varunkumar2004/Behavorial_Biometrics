@@ -1,4 +1,4 @@
-package com.varunkumar.myapplication
+package com.varunkumar.myapplication.data
 
 import android.content.ContentValues
 import android.content.Context
@@ -71,15 +71,33 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             do {
                 val sample = BiometricSample(
                     timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP)),
-                    touchX = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_X))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_X)),
-                    touchY = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_Y))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_Y)),
-                    pressure = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_PRESSURE))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_PRESSURE)),
-                    keyInterval = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_KEY_INTERVAL))) null else cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_KEY_INTERVAL)),
-                    dwellTime = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_DWELL_TIME))) null else cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DWELL_TIME)),
-                    touchSize = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_SIZE))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_SIZE)),
-                    accelX = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_X))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_X)),
-                    accelY = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Y))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Y)),
-                    accelZ = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Z))) null else cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Z)),
+                    touchX = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_X))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_TOUCH_X)
+                    ),
+                    touchY = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_Y))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_TOUCH_Y)
+                    ),
+                    pressure = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_PRESSURE))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_PRESSURE)
+                    ),
+                    keyInterval = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_KEY_INTERVAL))) null else cursor.getLong(
+                        cursor.getColumnIndexOrThrow(COLUMN_KEY_INTERVAL)
+                    ),
+                    dwellTime = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_DWELL_TIME))) null else cursor.getLong(
+                        cursor.getColumnIndexOrThrow(COLUMN_DWELL_TIME)
+                    ),
+                    touchSize = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_TOUCH_SIZE))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_TOUCH_SIZE)
+                    ),
+                    accelX = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_X))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_ACCEL_X)
+                    ),
+                    accelY = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Y))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Y)
+                    ),
+                    accelZ = if (cursor.isNull(cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Z))) null else cursor.getFloat(
+                        cursor.getColumnIndexOrThrow(COLUMN_ACCEL_Z)
+                    ),
                 )
                 samples.add(sample)
             } while (cursor.moveToNext())

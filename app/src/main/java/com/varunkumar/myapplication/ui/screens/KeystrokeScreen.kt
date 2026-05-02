@@ -1,4 +1,4 @@
-package com.varunkumar.myapplication
+package com.varunkumar.myapplication.ui.screens
 
 import android.content.Context
 import android.hardware.Sensor
@@ -27,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.varunkumar.myapplication.data.BiometricSample
+import com.varunkumar.myapplication.data.DatabaseHelper
 
 @Composable
 fun KeystrokeScreen(

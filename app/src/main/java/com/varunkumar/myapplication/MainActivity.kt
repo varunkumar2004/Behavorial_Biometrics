@@ -23,6 +23,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.varunkumar.myapplication.data.DatabaseHelper
+import com.varunkumar.myapplication.ui.screens.KeystrokeScreen
+import com.varunkumar.myapplication.ui.screens.TouchScreen
+import com.varunkumar.myapplication.ui.screens.TouchTaskMode
+import com.varunkumar.myapplication.ui.screens.TracingPattern
 import com.varunkumar.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
