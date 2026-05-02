@@ -7,15 +7,16 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -23,7 +24,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun KeystrokeScreen(
     modifier: Modifier = Modifier,
-    dbHelper: DatabaseHelper
+    dbHelper: DatabaseHelper,
+    onNext: () -> Unit,
 ) {
     val context = LocalContext.current
     var text by remember { mutableStateOf("") }
@@ -65,10 +66,6 @@ fun KeystrokeScreen(
         onDispose {
             listener?.let { sensorManager?.unregisterListener(it) }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        savedCount = dbHelper.getAllSamples().size
     }
 
     Column(
@@ -119,18 +116,28 @@ fun KeystrokeScreen(
             placeholder = { Text("Start typing here...") }
         )
 
-        Text(text = "Samples Saved: $savedCount")
-
-        Button(
-            onClick = {
-                dbHelper.clearAllData()
-                text = ""
-                savedCount = 0
-                lastTime = 0L
-            },
-            modifier = Modifier.align(Alignment.End)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Clear Data")
+            Button(
+                onClick = {
+                    text = ""
+                    savedCount = 0
+                    lastTime = 0L
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.filledTonalButtonColors()
+            ) {
+                Text("Retry Task")
+            }
+            Button(
+                onClick = onNext,
+                modifier = Modifier.weight(1f),
+                enabled = text.length > 5 // Allow next after some typing
+            ) {
+                Text("Finish Enrollment")
+            }
         }
     }
 }

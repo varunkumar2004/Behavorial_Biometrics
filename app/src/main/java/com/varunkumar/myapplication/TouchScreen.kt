@@ -21,10 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +42,6 @@ import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 
@@ -55,12 +52,12 @@ enum class TracingPattern { S_CURVE, CIRCLE }
 fun TouchScreen(
     modifier: Modifier = Modifier,
     dbHelper: DatabaseHelper,
+    mode: TouchTaskMode,
+    pattern: TracingPattern,
+    onNext: () -> Unit
 ) {
     val context = LocalContext.current
-    var savedCount by remember { mutableIntStateOf(0) }
     val collectedData = remember { mutableStateListOf<BiometricSample>() }
-    var currentMode by remember { mutableStateOf(TouchTaskMode.TRACING) }
-    var currentPattern by remember { mutableStateOf(TracingPattern.S_CURVE) }
 
     // Sensor state
     var accelX by remember { mutableFloatStateOf(0f) }
@@ -91,83 +88,45 @@ fun TouchScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        savedCount = dbHelper.getAllSamples().size
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Mode Selection
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = { currentMode = TouchTaskMode.TRACING },
-                modifier = Modifier.weight(1f),
-                colors = if (currentMode == TouchTaskMode.TRACING) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
-            ) {
-                Text("Tracing")
-            }
-            Button(
-                onClick = { currentMode = TouchTaskMode.TAPPING },
-                modifier = Modifier.weight(1f),
-                colors = if (currentMode == TouchTaskMode.TAPPING) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
-            ) {
-                Text("Tapping")
-            }
-        }
-
-        if (currentMode == TouchTaskMode.TRACING) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                TracingPattern.entries.forEach { pattern ->
-                    Button(
-                        onClick = { currentPattern = pattern },
-                        modifier = Modifier.weight(1f),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-                        colors = if (currentPattern == pattern) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary) else ButtonDefaults.filledTonalButtonColors()
-                    ) {
-                        Text(pattern.name.replace("_", " "), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }
-
         TouchPointComponent(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
             touchSamples = collectedData.filter { it.touchX != null && it.touchY != null },
             accelData = Triple(accelX, accelY, accelZ),
-            mode = currentMode,
-            pattern = currentPattern,
+            mode = mode,
+            pattern = pattern,
         ) { sample: BiometricSample ->
             collectedData.add(sample)
             dbHelper.insertSample(sample)
-            savedCount++
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = "Samples Saved: $savedCount", style = MaterialTheme.typography.bodyMedium)
             Button(
                 onClick = {
-                    dbHelper.clearAllData()
                     collectedData.clear()
-                    savedCount = 0
-                }
+                    // Note: We are not clearing DB here to avoid wiping previous steps
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.filledTonalButtonColors()
             ) {
-                Text("Clear Data")
+                Text("Retry Task")
+            }
+            Button(
+                onClick = onNext,
+                modifier = Modifier.weight(1f),
+                enabled = collectedData.isNotEmpty()
+            ) {
+                Text("Next Step")
             }
         }
     }
@@ -337,10 +296,4 @@ fun TouchPointComponent(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TouchScreenPreview() {
-    TouchScreen(dbHelper = DatabaseHelper(LocalContext.current))
 }
