@@ -22,9 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,8 +41,11 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.varunkumar.myapplication.data.BiometricSample
 import com.varunkumar.myapplication.data.DatabaseHelper
+import com.varunkumar.myapplication.ui.viewmodel.TouchViewModel
+import com.varunkumar.myapplication.ui.viewmodel.ViewModelFactory
 import kotlin.random.Random
 
 enum class TouchTaskMode { TRACING, TAPPING }
@@ -56,15 +57,10 @@ fun TouchScreen(
     dbHelper: DatabaseHelper,
     mode: TouchTaskMode,
     pattern: TracingPattern,
-    onNext: () -> Unit
+    viewModel: TouchViewModel = viewModel(factory = ViewModelFactory(dbHelper)),
+    onNext: () -> Unit,
 ) {
     val context = LocalContext.current
-    val collectedData = remember { mutableStateListOf<BiometricSample>() }
-
-    // Sensor state
-    var accelX by remember { mutableFloatStateOf(0f) }
-    var accelY by remember { mutableFloatStateOf(0f) }
-    var accelZ by remember { mutableFloatStateOf(0f) }
 
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
@@ -74,9 +70,7 @@ fun TouchScreen(
             object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent?) {
                     event?.let {
-                        accelX = it.values[0]
-                        accelY = it.values[1]
-                        accelZ = it.values[2]
+                        viewModel.updateAccelerometer(it.values[0], it.values[1], it.values[2])
                     }
                 }
                 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -100,13 +94,21 @@ fun TouchScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            touchSamples = collectedData.filter { it.touchX != null && it.touchY != null },
-            accelData = Triple(accelX, accelY, accelZ),
+            touchSamples = viewModel.collectedData.filter { it.touchX != null && it.touchY != null },
+            accelData = Triple(viewModel.accelX, viewModel.accelY, viewModel.accelZ),
             mode = mode,
             pattern = pattern,
+            targetPosition = viewModel.targetPosition,
+            onTargetHit = {
+                viewModel.updateTargetPosition(
+                    Offset(
+                        Random.nextFloat().coerceIn(0.1f, 0.9f),
+                        Random.nextFloat().coerceIn(0.1f, 0.9f)
+                    )
+                )
+            }
         ) { sample: BiometricSample ->
-            collectedData.add(sample)
-            dbHelper.insertSample(sample)
+            viewModel.addSample(sample)
         }
 
         Row(
@@ -115,8 +117,7 @@ fun TouchScreen(
         ) {
             Button(
                 onClick = {
-                    collectedData.clear()
-                    // Note: We are not clearing DB here to avoid wiping previous steps
+                    viewModel.clearCollectedData()
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.filledTonalButtonColors()
@@ -126,7 +127,7 @@ fun TouchScreen(
             Button(
                 onClick = onNext,
                 modifier = Modifier.weight(1f),
-                enabled = collectedData.isNotEmpty()
+                enabled = viewModel.collectedData.isNotEmpty()
             ) {
                 Text("Next Step")
             }
@@ -141,13 +142,13 @@ fun TouchPointComponent(
     accelData: Triple<Float, Float, Float>,
     mode: TouchTaskMode,
     pattern: TracingPattern,
+    targetPosition: Offset,
+    onTargetHit: () -> Unit,
     addCollectedData: (BiometricSample) -> Unit
 ) {
     var lastSample by remember { mutableStateOf<BiometricSample?>(null) }
     var startTime by remember { mutableLongStateOf(0L) }
     
-    // Tapping Task State
-    var targetPosition by remember { mutableStateOf(Offset(0.5f, 0.5f)) } // Normalized 0..1
     val tapRadius = 40.dp
 
     val (targetColor, heatMapColor) = when {
@@ -204,11 +205,7 @@ fun TouchPointComponent(
                                         val dist = Offset(change.position.x - px, change.position.y - py).getDistance()
                                         
                                         if (dist < tapRadius.toPx() * 2) {
-                                            // Hit! Move target
-                                            targetPosition = Offset(
-                                                Random.nextFloat().coerceIn(0.1f, 0.9f),
-                                                Random.nextFloat().coerceIn(0.1f, 0.9f)
-                                            )
+                                            onTargetHit()
                                         }
                                     }
                                 }
