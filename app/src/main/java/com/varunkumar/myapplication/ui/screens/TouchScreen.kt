@@ -194,44 +194,56 @@ fun TouchPointComponent(
                             val event = awaitPointerEvent()
                             val change = event.changes.first()
 
-                            if (change.pressed) {
-                                if (change.changedToDown()) {
-                                    startTime = System.currentTimeMillis()
+                            if (change.changedToDown()) {
+                                startTime = System.currentTimeMillis()
+                                
+                                // In Tapping mode, check if target was hit
+                                if (mode == TouchTaskMode.TAPPING) {
+                                    val px = targetPosition.x * size.width
+                                    val py = targetPosition.y * size.height
+                                    val dist = Offset(change.position.x - px, change.position.y - py).getDistance()
                                     
-                                    // In Tapping mode, check if target was hit
-                                    if (mode == TouchTaskMode.TAPPING) {
-                                        val px = targetPosition.x * size.width
-                                        val py = targetPosition.y * size.height
-                                        val dist = Offset(change.position.x - px, change.position.y - py).getDistance()
-                                        
-                                        if (dist < tapRadius.toPx() * 2) {
-                                            onTargetHit()
-                                        }
+                                    if (dist < tapRadius.toPx() * 2) {
+                                        onTargetHit()
                                     }
                                 }
+                            }
 
-                                val currentTime = System.currentTimeMillis()
-                                val dwell = if (startTime != 0L) currentTime - startTime else 0L
+                            val currentTime = System.currentTimeMillis()
+                            val dwell = if (startTime != 0L) currentTime - startTime else 0L
 
-                                val sample = BiometricSample(
-                                    timestamp = currentTime,
-                                    touchX = change.position.x,
-                                    touchY = change.position.y,
-                                    pressure = change.pressure,
-                                    keyInterval = null,
-                                    dwellTime = dwell,
-                                    accelX = accelData.first,
-                                    accelY = accelData.second,
-                                    accelZ = accelData.third
-                                )
-                                
-                                addCollectedData(sample)
-                                lastSample = sample
-                                
-                                if (change.changedToUp()) {
-                                    startTime = 0L
+                            val sample = BiometricSample(
+                                timestamp = currentTime,
+                                touchX = change.position.x,
+                                touchY = change.position.y,
+                                pressure = change.pressure,
+                                keyInterval = null,
+                                dwellTime = dwell,
+                                accelX = accelData.first,
+                                accelY = accelData.second,
+                                accelZ = accelData.third
+                            )
+                            
+                            if (mode == TouchTaskMode.TRACING) {
+                                if (change.pressed) {
+                                    addCollectedData(sample)
+                                    lastSample = sample
                                 }
-                                
+                            } else {
+                                // Tapping mode
+                                if (change.pressed) {
+                                    lastSample = sample
+                                } else if (change.changedToUp()) {
+                                    addCollectedData(sample)
+                                    lastSample = sample
+                                }
+                            }
+
+                            if (change.changedToUp()) {
+                                startTime = 0L
+                            }
+                            
+                            if (change.pressed || change.changedToUp()) {
                                 change.consume()
                             }
                         }
